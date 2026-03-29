@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+
+# Bỏ qua các thư mục chứa dữ liệu lớn (tránh lỗi quá 100MB của GitHub)
+data/raw/
+data/raws/
+data/staging/
+data/warehouse/
