@@ -8,3 +8,8 @@ data/raw/
 data/raws/
 data/staging/
 data/warehouse/
+
+# Bỏ qua các tệp nén dung lượng cao
+*.zip
+*.rar
+*.7z

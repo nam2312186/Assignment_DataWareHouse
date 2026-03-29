@@ -73,8 +73,16 @@ Cài đặt các thư viện cần thiết:
 pip install -r requirements.txt
 ```
 
+### 1.5. Nạp Dữ liệu Gốc (Dành cho Người Mới / Giảng Viên)
+Do nền tảng GitHub từ chối chứa tệp tin quá lớn (vượt giới hạn 100MB), Dữ liệu Gốc (`Raw Data`) đã bị chặn và không có trên Repository trực tuyến.
+Để chạy được mã nguồn nguyên vẹn trên máy giảng viên hoặc cộng sự mới, xin vui lòng:
+1. Bạn hãy giải nén nguồn Data Gốc từ file ZIP do trưởng nhóm cung cấp (tên là `raws.zip` hoặc tương tự).
+2. Lấy toàn bộ các file `*.csv` (ví dụ: `orders.csv`, `order_products__prior.csv`...).
+3. Chép đè toàn bộ chúng vào đúng đường dẫn bảo tồn: `data/raws/`.
+*(Chú ý: Hãy kiểm tra chắc chắn tệp `data/raws/orders.csv` đã hiện diện với dung lượng ~100MB, và file prior là ~550MB trước khi đi tiếp).*
+
 ### 2. Xây Dựng Kho Dữ Liệu (Run ETL Pipeline)
-Sau khi đảm bảo các file CSV thô đã nằm trong thư mục `data/raw/`, hãy khởi chạy quá trình biên dịch dữ liệu (bước này sẽ mất vài phút tuỳ cấu hình máy do phải xử lý 32 triệu dòng data):
+Sau khi đảm bảo các file CSV thô đã nằm an toàn trong thư mục `data/raws/`, hãy khởi chạy quá trình nhào nặn Database lớn nhất dự án (bước này sẽ mất vài phút tuỳ sức cày của CPU do phải xử lý vòng lặp 32 triệu Transaction):
 
 ```powershell
 python run_etl.py
