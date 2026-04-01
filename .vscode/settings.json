@@ -4,13 +4,6 @@
         "*.csv": "duckdb.dataFileViewer",
         "*.tsv": "duckdb.dataFileViewer"
     },
-    "duckdb.databases": [
-        {
-            "alias": "instacart_dw",
-            "type": "file",
-            "path": "d:\\Daihoc\\Nam3\\DataWareHouse\\BTL\\Instacart-Market-Basket-Analysis\\data\\warehouse\\instacart_dw.duckdb",
-            "attached": true
-        }
-    ],
+    "duckdb.databases": [],
     "duckdb.defaultDatabase": "instacart_dw"
 }

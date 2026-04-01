@@ -19,174 +19,173 @@ DB_PATH = Path("data/warehouse/instacart_dw.duckdb")
 MART_BASKET = Path("data/warehouse/marts/mart_basket.csv")
 
 # --- CACHE DATA FUNCTIONS ---
-@st.cache_resource
 def get_db_connection():
     return duckdb.connect(str(DB_PATH), read_only=True)
 
 @st.cache_data
 def load_overview_metrics():
-    con = get_db_connection()
-    metrics = con.execute("""
-        SELECT 
-            (SELECT COUNT(*) FROM dim_order) as total_orders,
-            (SELECT COUNT(*) FROM dim_user) as total_users,
-            (SELECT COUNT(*) FROM dim_product) as total_products,
-            (SELECT COUNT(*) FROM fact_order_items) as total_interactions,
-            (SELECT COUNT(*) FROM fact_order_items) * 1.0 / (SELECT COUNT(*) FROM dim_order) as avg_basket_size
-    """).fetchone()
-    return metrics
+    with get_db_connection() as con:
+        metrics = con.execute("""
+            SELECT 
+                (SELECT COUNT(*) FROM dim_order) as total_orders,
+                (SELECT COUNT(*) FROM dim_user) as total_users,
+                (SELECT COUNT(*) FROM dim_product) as total_products,
+                (SELECT COUNT(*) FROM fact_order_items) as total_interactions,
+                (SELECT COUNT(*) FROM fact_order_items) * 1.0 / (SELECT COUNT(*) FROM dim_order) as avg_basket_size
+        """).fetchone()
+        return metrics
 
 @st.cache_data
 def load_treemap_data():
-    con = get_db_connection()
-    df = con.execute("""
-        SELECT 
-            d.department_name,
-            a.aisle_name,
-            COUNT(*) as items_sold
-        FROM fact_order_items f
-        JOIN dim_product p ON f.product_id = p.product_id
-        JOIN dim_department d ON p.department_id = d.department_id
-        JOIN dim_aisle a ON p.aisle_id = a.aisle_id
-        GROUP BY d.department_name, a.aisle_name
-        ORDER BY items_sold DESC
-    """).df()
-    return df
+    with get_db_connection() as con:
+        df = con.execute("""
+            SELECT 
+                d.department_name,
+                a.aisle_name,
+                COUNT(*) as items_sold
+            FROM fact_order_items f
+            JOIN dim_product p ON f.product_id = p.product_id
+            JOIN dim_department d ON p.department_id = d.department_id
+            JOIN dim_aisle a ON p.aisle_id = a.aisle_id
+            GROUP BY d.department_name, a.aisle_name
+            ORDER BY items_sold DESC
+        """).df()
+        return df
 
 @st.cache_data
 def load_raw_data(limit=100, dept=None):
-    con = get_db_connection()
-    query = """
-        SELECT 
-            f.order_id,
-            u.user_id,
-            p.product_name,
-            d.department_name,
-            a.aisle_name,
-            o.order_hour_of_day,
-            f.add_to_cart_order,
-            f.reordered
-        FROM fact_order_items f
-        JOIN dim_product p ON f.product_id = p.product_id
-        JOIN dim_order o ON f.order_id = o.order_id
-        JOIN dim_user u ON o.user_id = u.user_id
-        JOIN dim_department d ON p.department_id = d.department_id
-        JOIN dim_aisle a ON p.aisle_id = a.aisle_id
-    """
-    if dept and dept != "Tất Cả":
-        query += f" WHERE d.department_name = '{dept}'"
-    query += f" LIMIT {limit}"
-    return con.execute(query).df()
+    with get_db_connection() as con:
+        query = """
+            SELECT 
+                f.order_id,
+                u.user_id,
+                p.product_name,
+                d.department_name,
+                a.aisle_name,
+                o.order_hour_of_day,
+                f.add_to_cart_order,
+                f.reordered
+            FROM fact_order_items f
+            JOIN dim_product p ON f.product_id = p.product_id
+            JOIN dim_order o ON f.order_id = o.order_id
+            JOIN dim_user u ON o.user_id = u.user_id
+            JOIN dim_department d ON p.department_id = d.department_id
+            JOIN dim_aisle a ON p.aisle_id = a.aisle_id
+        """
+        if dept and dept != "Tất Cả":
+            query += f" WHERE d.department_name = '{dept}'"
+        query += f" LIMIT {limit}"
+        return con.execute(query).df()
 
 @st.cache_data
 def load_top_departments():
-    con = get_db_connection()
-    df = con.execute("""
-        SELECT 
-            d.department_name,
-            COUNT(*) as items_sold
-        FROM fact_order_items f
-        JOIN dim_product p ON f.product_id = p.product_id
-        JOIN dim_department d ON p.department_id = d.department_id
-        GROUP BY d.department_name
-        ORDER BY items_sold DESC
-        LIMIT 10
-    """).df()
-    return df
+    with get_db_connection() as con:
+        df = con.execute("""
+            SELECT 
+                d.department_name,
+                COUNT(*) as items_sold
+            FROM fact_order_items f
+            JOIN dim_product p ON f.product_id = p.product_id
+            JOIN dim_department d ON p.department_id = d.department_id
+            GROUP BY d.department_name
+            ORDER BY items_sold DESC
+            LIMIT 10
+        """).df()
+        return df
 
 @st.cache_data
 def load_order_hours():
-    con = get_db_connection()
-    df = con.execute("""
-        SELECT 
-            order_hour_of_day,
-            COUNT(*) as total
-        FROM dim_order
-        GROUP BY order_hour_of_day
-        ORDER BY order_hour_of_day
-    """).df()
-    return df
+    with get_db_connection() as con:
+        df = con.execute("""
+            SELECT 
+                order_hour_of_day,
+                COUNT(*) as total
+            FROM dim_order
+            GROUP BY order_hour_of_day
+            ORDER BY order_hour_of_day
+        """).df()
+        return df
 
 @st.cache_data
 def load_dow_distribution():
-    con = get_db_connection()
-    df = con.execute("""
-        SELECT 
-            order_dow, 
-            COUNT(*) as total_orders 
-        FROM dim_order 
-        GROUP BY order_dow 
-        ORDER BY order_dow
-    """).df()
-    days = {0: 'Sunday', 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday'}
-    df['day_name'] = df['order_dow'].map(days)
-    return df
+    with get_db_connection() as con:
+        df = con.execute("""
+            SELECT 
+                order_dow, 
+                COUNT(*) as total_orders 
+            FROM dim_order 
+            GROUP BY order_dow 
+            ORDER BY order_dow
+        """).df()
+        days = {0: 'Sunday', 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday'}
+        df['day_name'] = df['order_dow'].map(days)
+        return df
 
 @st.cache_data
 def load_days_since_prior():
-    con = get_db_connection()
-    df = con.execute("""
-        SELECT 
-            days_since_prior_order, 
-            COUNT(*) as total_orders 
-        FROM dim_order 
-        WHERE days_since_prior_order IS NOT NULL
-        GROUP BY days_since_prior_order 
-        ORDER BY days_since_prior_order
-    """).df()
-    return df
+    with get_db_connection() as con:
+        df = con.execute("""
+            SELECT 
+                days_since_prior_order, 
+                COUNT(*) as total_orders 
+            FROM dim_order 
+            WHERE days_since_prior_order IS NOT NULL
+            GROUP BY days_since_prior_order 
+            ORDER BY days_since_prior_order
+        """).df()
+        return df
 
 @st.cache_data
 def load_reorder_rates():
-    con = get_db_connection()
-    df = con.execute("""
-        SELECT 
-            d.department_name,
-            AVG(p.reorder_rate) as avg_reorder_rate
-        FROM dim_product p
-        JOIN dim_department d ON p.department_id = d.department_id
-        WHERE p.reorder_rate > 0 AND p.order_frequency > 100
-        GROUP BY d.department_name
-        ORDER BY avg_reorder_rate DESC
-    """).df()
-    
-    # Overall reorder rate
-    overall = con.execute("""
-        SELECT SUM(CASE WHEN reordered = 1 THEN 1 ELSE 0 END) * 1.0 / COUNT(*) 
-        FROM fact_order_items
-    """).fetchone()[0]
-    return df, overall
+    with get_db_connection() as con:
+        df = con.execute("""
+            SELECT 
+                d.department_name,
+                AVG(p.reorder_rate) as avg_reorder_rate
+            FROM dim_product p
+            JOIN dim_department d ON p.department_id = d.department_id
+            WHERE p.reorder_rate > 0 AND p.order_frequency > 100
+            GROUP BY d.department_name
+            ORDER BY avg_reorder_rate DESC
+        """).df()
+        
+        # Overall reorder rate
+        overall = con.execute("""
+            SELECT SUM(CASE WHEN reordered = 1 THEN 1 ELSE 0 END) * 1.0 / COUNT(*) 
+            FROM fact_order_items
+        """).fetchone()[0]
+        return df, overall
 
 @st.cache_data
 def load_product_scatter():
-    con = get_db_connection()
-    df = con.execute("""
-        SELECT 
-            p.product_name,
-            d.department_name,
-            p.reorder_rate,
-            p.order_frequency
-        FROM dim_product p
-        JOIN dim_department d ON p.department_id = d.department_id
-        WHERE p.order_frequency > 500
-    """).df()
-    return df
+    with get_db_connection() as con:
+        df = con.execute("""
+            SELECT 
+                p.product_name,
+                d.department_name,
+                p.reorder_rate,
+                p.order_frequency
+            FROM dim_product p
+            JOIN dim_department d ON p.department_id = d.department_id
+            WHERE p.order_frequency > 500
+        """).df()
+        return df
 
 @st.cache_data
 def load_department_products(dept_name):
-    con = get_db_connection()
-    df = con.execute(f"""
-        SELECT 
-            p.product_name,
-            p.reorder_rate,
-            p.order_frequency
-        FROM dim_product p
-        JOIN dim_department d ON p.department_id = d.department_id
-        WHERE d.department_name = '{dept_name}' AND p.order_frequency > 500
-        ORDER BY p.reorder_rate DESC
-        LIMIT 15
-    """).df()
-    return df
+    with get_db_connection() as con:
+        df = con.execute(f"""
+            SELECT 
+                p.product_name,
+                p.reorder_rate,
+                p.order_frequency
+            FROM dim_product p
+            JOIN dim_department d ON p.department_id = d.department_id
+            WHERE d.department_name = '{dept_name}' AND p.order_frequency > 500
+            ORDER BY p.reorder_rate DESC
+            LIMIT 15
+        """).df()
+        return df
 
 @st.cache_data
 def train_association_rules(top_n=500):
