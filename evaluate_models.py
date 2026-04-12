@@ -7,12 +7,28 @@ from dotenv import load_dotenv
 warnings.filterwarnings('ignore')
 load_dotenv() # Khởi chạy và nạp các biến số từ file .env
 
+import random
+import numpy as np
+import torch
 from mlxtend.preprocessing import TransactionEncoder
 from mlxtend.frequent_patterns import fpgrowth, association_rules
 from src.eval_utils import create_holdout_test_set, calculate_hit_rate, predict_apriori
 from src.gnn_utils import prepare_graph_data, train_lightgcn, predict_gnn_bipartite
 
+def seed_everything(seed=42):
+    """Máy sẽ luôn cho ra 1 kết quả duy nhất để dễ làm báo cáo"""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    os.environ['PYTHONHASHSEED'] = str(seed)
+
 def run_evaluation():
+    # Chốt hạt giống ngay khi bắt đầu
+    seed_everything(42)
+    
     # ----------------------------------------------------
     # Chuẩn bị Data
     # ----------------------------------------------------

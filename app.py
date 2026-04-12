@@ -2,9 +2,20 @@ import streamlit as st
 import duckdb
 import pandas as pd
 import plotly.express as px
+import random
+import numpy as np
 from pathlib import Path
 from mlxtend.preprocessing import TransactionEncoder
 from mlxtend.frequent_patterns import fpgrowth, association_rules
+
+# --- GLOBAL SEEDING ---
+def seed_everything(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    # Ghi chú: Streamlit chạy đa luồng, nhưng các tính toán Data trong cache 
+    # và Sampling sẽ được cố định nhờ bộ hạt giống này.
+
+seed_everything(42)
 
 # --- PAGE SETUP ---
 st.set_page_config(
