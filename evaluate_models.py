@@ -2,6 +2,8 @@ import os
 import pandas as pd
 import time
 import warnings
+import json
+from pathlib import Path
 from dotenv import load_dotenv
 
 warnings.filterwarnings('ignore')
@@ -126,6 +128,22 @@ def run_evaluation():
     print("-> Bước 2/3: Bắt đầu Training LightGCN (Graph Convolution) x 20 Epochs...")
     model, item_emb, gnn_time = train_lightgcn(edge_index, metadata, epochs=20, dim=32)
     print(f"✅ Train xong! (Thời gian tính toán mạng Neural: {gnn_time:.2f} s)")
+
+    # Lưu checkpoint để có thể load lại model sau này
+    artifact_dir = Path("evaluation") / "artifacts"
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    model_path = artifact_dir / "lightgcn_checkpoint.pt"
+    torch.save(
+        {
+            "model_state_dict": model.state_dict(),
+            "item_emb": item_emb.cpu(),
+            "metadata": metadata,
+            "epochs": 20,
+            "embedding_dim": 32,
+        },
+        model_path,
+    )
+    print(f"💾 Đã lưu checkpoint LightGCN → {model_path}")
     
     print("-> Bước 3/3: Quá trình Dự đoán & Đánh giá (Evaluation)...")
     def gnn_predictor(input_basket, **kwargs):
@@ -167,7 +185,6 @@ def run_evaluation():
         f.write("do đó Recall cao hơn gấp nhiều lần. Nhưng đánh đổi lại tốc độ Train chậm hơn đáng kể.")
         
     # Xuất data tĩnh (.json) để Streamlit đọc lên giao diện tự động
-    import json
     json_path = os.path.join("evaluation", "metrics.json")
     metrics_data = {
         "recall_fp": round(fp_recall * 100, 2),

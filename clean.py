@@ -34,7 +34,8 @@ def main():
     
     # Danh sách các file cốt lõi cần làm sạch
     files_to_remove = [
-        Path("data/warehouse/instacart_dw.duckdb"), # File cơ sở dữ liệu DuckDB
+        Path("data/warehouse/instacart_dw.duckdb"),         # File cơ sở dữ liệu DuckDB
+        Path("evaluation/artifacts/lightgcn_checkpoint.pt"), # Model checkpoint LightGCN
     ]
     
     print("[1] Đang dọn file CSDL DuckDB...")
