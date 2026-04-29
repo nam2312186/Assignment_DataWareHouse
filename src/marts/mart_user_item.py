@@ -38,26 +38,47 @@ def build_mart_user_item() -> None:
 
     con = duckdb.connect(str(DB_PATH), read_only=True)
 
-    df = con.execute("""
+    out = MARTS_DIR / "mart_user_item.csv"
+
+    # ✅ Dùng DuckDB's native CSV export (tránh load toàn bộ vào RAM)
+    con.execute(f"""
+        COPY (
+            SELECT
+                f.user_id,
+                f.product_id,
+                p.product_name,
+                COUNT(*)        AS interaction_count,
+                ROUND(AVG(CAST(f.reordered AS DOUBLE)), 4) AS reorder_rate
+            FROM fact_order_items  f
+            JOIN dim_product       p ON f.product_id = p.product_id
+            WHERE f.eval_set = 'prior'
+            GROUP BY f.user_id, f.product_id, p.product_name
+            ORDER BY f.user_id, interaction_count DESC
+        ) TO '{out}' (FORMAT CSV, HEADER TRUE);
+    """)
+
+    # ── Get statistics ──
+    stats = con.execute("""
         SELECT
-            f.user_id,
-            f.product_id,
-            p.product_name,
-            COUNT(*)        AS interaction_count,
-            ROUND(AVG(CAST(f.reordered AS DOUBLE)), 4) AS reorder_rate
-        FROM fact_order_items  f
-        JOIN dim_product       p ON f.product_id = p.product_id
-        WHERE f.eval_set = 'prior'
-        GROUP BY f.user_id, f.product_id, p.product_name
-        ORDER BY f.user_id, interaction_count DESC
-    """).df()
+            COUNT(*) as pair_count,
+            COUNT(DISTINCT user_id) as unique_users,
+            COUNT(DISTINCT product_id) as unique_products
+        FROM (
+            SELECT
+                f.user_id,
+                f.product_id
+            FROM fact_order_items  f
+            WHERE f.eval_set = 'prior'
+            GROUP BY f.user_id, f.product_id
+        )
+    """).fetchall()
 
     con.close()
 
-    out = MARTS_DIR / "mart_user_item.csv"
-    df.to_csv(out, index=False)
+    pair_count, unique_users, unique_products = stats[0]
+    sparsity = 1 - pair_count / (unique_users * unique_products)
 
-    print(f"    ✓ {len(df):,} user-item pairs → {out}")
-    print(f"    ✓ {df['user_id'].nunique():,} unique users  |  "
-          f"{df['product_id'].nunique():,} unique products")
-    print(f"    ✓ Sparsity: {1 - len(df) / (df['user_id'].nunique() * df['product_id'].nunique()):.4%}")
+    print(f"    ✓ {pair_count:,} user-item pairs → {out}")
+    print(f"    ✓ {unique_users:,} unique users  |  "
+          f"{unique_products:,} unique products")
+    print(f"    ✓ Sparsity: {sparsity:.4%}")

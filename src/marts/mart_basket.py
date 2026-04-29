@@ -37,25 +37,46 @@ def build_mart_basket() -> None:
 
     con = duckdb.connect(str(DB_PATH), read_only=True)
 
-    df = con.execute("""
+    out = MARTS_DIR / "mart_basket.csv"
+    
+    # ✅ Dùng DuckDB's native CSV export (tránh load toàn bộ vào RAM)
+    con.execute(f"""
+        COPY (
+            SELECT
+                f.order_id,
+                p.product_name,
+                p.aisle_name,
+                p.department_name
+            FROM fact_order_items  f
+            JOIN dim_product       p ON f.product_id = p.product_id
+            JOIN dim_order         o ON f.order_id   = o.order_id
+            WHERE f.eval_set = 'prior'
+            ORDER BY f.order_id, p.product_name
+        ) TO '{out}' (FORMAT CSV, HEADER TRUE);
+    """)
+
+    # ──  Get statistics (load chỉ một lần cho thống kê) ──
+    stats = con.execute("""
         SELECT
-            f.order_id,
-            p.product_name,
-            p.aisle_name,
-            p.department_name
-        FROM fact_order_items  f
-        JOIN dim_product       p ON f.product_id = p.product_id
-        JOIN dim_order         o ON f.order_id   = o.order_id
-        WHERE f.eval_set = 'prior'
-        ORDER BY f.order_id, p.product_name
-    """).df()
+            COUNT(*) as row_count,
+            COUNT(DISTINCT order_id) as unique_orders,
+            COUNT(DISTINCT product_name) as unique_products
+        FROM (
+            SELECT
+                f.order_id,
+                p.product_name
+            FROM fact_order_items  f
+            JOIN dim_product       p ON f.product_id = p.product_id
+            JOIN dim_order         o ON f.order_id   = o.order_id
+            WHERE f.eval_set = 'prior'
+        )
+    """).fetchall()
 
     con.close()
 
-    out = MARTS_DIR / "mart_basket.csv"
-    df.to_csv(out, index=False)
+    row_count, unique_orders, unique_products = stats[0]
 
-    print(f"    ✓ {len(df):,} dòng đã lưu → {out}")
-    print(f"    ✓ {df['order_id'].nunique():,} unique orders  |  "
-          f"{df['product_name'].nunique():,} unique products")
-    print(f"    ✓ Trung bình {len(df) / df['order_id'].nunique():.1f} sản phẩm/đơn")
+    print(f"    ✓ {row_count:,} dòng đã lưu → {out}")
+    print(f"    ✓ {unique_orders:,} unique orders  |  "
+          f"{unique_products:,} unique products")
+    print(f"    ✓ Trung bình {row_count / unique_orders:.1f} sản phẩm/đơn")

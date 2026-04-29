@@ -102,7 +102,7 @@ streamlit run app.py
 ```powershell
 python evaluate_models.py
 ```
-*Lưu ý: Mặc định script tự động lấy 20% lượng Data Warehouse (cấu hình qua biến số `SAMPLE_DATA_RATIO` tại file `.env` root). Kết quả thi (Recall, Precision, F1-Score) sẽ tự động xuất vào `evaluation/metrics.json` và `evaluation/benchmark_results.txt` để vẽ lên Streamlit Dashboard.*
+*Lưu ý: Mặc định script tự động lấy 5% lượng Data Warehouse (cấu hình qua biến số `SAMPLE_DATA_RATIO` tại file `.env` root). Kết quả thi (Recall, Precision, F1-Score) sẽ tự động xuất vào `evaluation/metrics.json` và `evaluation/benchmark_results.txt` để vẽ lên Streamlit Dashboard.*
 
 ### 5. Dọn dẹp Dự án (Tùy chọn)
 Nếu bạn muốn Reset dự án từ đầu (hoặc trước khi nén gửi GV), hãy chạy lệnh:

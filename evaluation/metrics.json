@@ -2,7 +2,7 @@
     "recall_fp": 7.81,
     "precision_fp": 6.34,
     "f1_fp": 7.0,
-    "recall_gnn": 16.04,
-    "precision_gnn": 3.64,
-    "f1_gnn": 5.93
+    "recall_gnn": 16.13,
+    "precision_gnn": 3.65,
+    "f1_gnn": 5.96
 }
