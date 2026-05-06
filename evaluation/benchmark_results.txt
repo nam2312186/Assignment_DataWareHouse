@@ -6,6 +6,6 @@ Tiêu chí (Metric)    | FP-Growth       | LightGCN (GNN)
 Chỉ số Recall        |          7.81% |         16.13%
 Chỉ số Precision     |          6.34% |          3.65%
 Điểm F1-Score        |          7.00% |          5.96%
-Tốc độ Training      |         10.12s |         21.22s
+Tốc độ Training      |          9.38s |         20.67s
 
 💡 Phân tích: Thuật toán AI LightGCN có khả năng tìm kiếm món hàng rộng hơn, do đó Recall cao hơn gấp nhiều lần. Nhưng đánh đổi lại tốc độ Train chậm hơn đáng kể.
